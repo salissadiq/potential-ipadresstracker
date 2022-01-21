@@ -1,3 +1,4 @@
+![](./home.png)
 # app
 
 ## Project setup
