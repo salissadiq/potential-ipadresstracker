@@ -6,8 +6,16 @@
       <div class="w-full max-w-screen-sm">
         <h1 class="text text-center text-white text-3xl pb-4">IP Address Tracker</h1>
         <div class="flex">
-          <input class="flex-1 py-3 px-2 rounded-tl-md rounded-bl-md focus:outline-none" type="text" placeholder="Search for any IP address or leave empty to get your IP info">
-          <i class="
+          <input 
+          v-model="queryIp"
+          class="flex-1 
+          py-3 px-2 
+          rounded-tl-md rounded-bl-md 
+          focus:outline-none"
+          type="text" placeholder="Search for any IP address or leave empty to get your IP info">
+          <i
+          @click="getIpInfo" 
+          class="
           cursor-pointer
           bg-black
           text-white
@@ -20,7 +28,7 @@
         </div>
       </div>
       <!-- Search Result -->
-      <IPInfo/>
+      <IPInfo v-if="ipInfo" :ipInfo="ipInfo" />
     </div>
     <!-- Map -->
     <div id="mapid" class="h-full z-10"></div>
@@ -30,9 +38,10 @@
 
 <script>
 
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import IPInfo from '../components/IPInfo.vue'
 import leaflet from 'leaflet'
+import axios from 'axios'
 export default {
   name: 'Home',
   components: {
@@ -40,6 +49,8 @@ export default {
   },
   setup() {
     let myMap;
+    const queryIp = ref("")
+    const ipInfo = ref(null)
     onMounted(()=>{
       myMap = leaflet.map('mapid').setView([51.505, -0.09], 13);
       leaflet.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoic2Fsc2NvZGVzIiwiYSI6ImNreW8wMTc1NTJtbzEyb3AwODZpYjhhZDgifQ.i42mc7jKGhBqh-GvcAvXRA', {
@@ -51,7 +62,30 @@ export default {
         accessToken: 'pk.eyJ1Ijoic2Fsc2NvZGVzIiwiYSI6ImNreW8wMTc1NTJtbzEyb3AwODZpYjhhZDgifQ.i42mc7jKGhBqh-GvcAvXRA'
       }).addTo(myMap);
     })
+
+    const getIpInfo = async () => {
+      try {
+        const data = await axios.get(`https://geo.ipify.org/api/v2/country,city?apiKey=at_FHmifZsdVxhJVx5It5qODuhy9QvyB&ipAddress=${queryIp.value}`)
+        const result = data.data
+        ipInfo.value = {
+          address: result.ip,
+          state: result.location.region,
+          country: result.location.country,
+          timezone: result.location.timezone,
+          isp: result.isp,
+          lat: result.location.lat,
+          lng: result.location.lng
+        }
+      } catch(err) {
+        alert(err.message)
+      }
+    }
+
+    return {queryIp, ipInfo, getIpInfo}
+
   }
+
+  
 }
 
 // 3070009137
